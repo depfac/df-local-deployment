@@ -1,0 +1,16 @@
+CREATE USER metavault WITH PASSWORD 'metavault_password' NOSUPERUSER CREATEDB CREATEROLE;
+CREATE ROLE stg_loader;
+CREATE ROLE stg_reader;
+CREATE ROLE dv_reader;
+CREATE ROLE ref_reader;
+CREATE ROLE dv_loader;
+CREATE ROLE im_reader;
+CREATE ROLE im_loader;
+CREATE ROLE meta_reader;
+CREATE ROLE df_operator;
+CREATE USER metavault_readonly WITH PASSWORD 'metavault_readonly_password';
+GRANT stg_reader TO metavault_readonly;
+GRANT ref_reader TO metavault_readonly;
+GRANT dv_reader TO metavault_readonly;
+GRANT im_reader TO metavault_readonly;
+GRANT meta_reader TO metavault_readonly;

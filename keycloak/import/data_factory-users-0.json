@@ -1,0 +1,27 @@
+{
+  "realm" : "data_factory",
+  "users" : [ {
+    "id" : "4ee55a2e-1da6-4c90-ae40-892605d180b5",
+    "username" : "admin",
+    "firstName" : "Admin",
+    "lastName" : "Admin",
+    "email" : "admin@example.local",
+    "emailVerified" : true,
+    "createdTimestamp" : 1720682545950,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "2304409c-056d-4b96-861f-96c7fde62090",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1720682618441,
+      "secretData" : "{\"value\":\"4LcGmtzIWY81a5AzNCLHyUVL9msxQcCaoB+8Bvuy95s2GYtTVjRquBj8z7D8+vNXsQxZhd7B5MsZ1ZE9Clyg2Q==\",\"salt\":\"cl/EU0u4XW2UCsaj36K/5Q==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-data_factory" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  } ]
+}

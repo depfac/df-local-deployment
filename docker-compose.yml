@@ -1,0 +1,143 @@
+services:
+  redis:
+    image: redis:${REDIS_VERSION:-alpine}
+    container_name: redis
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # More information on how to use it here: https://hub.docker.com/_/postgres
+  postgresql:
+    image: postgres:${POSTGRES_VERSION:-16}
+    container_name: postgresql
+    environment:
+      POSTGRES_USER: postgres 
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres_password}"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./postgresql:/docker-entrypoint-initdb.d/
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
+    healthcheck:
+      test: pg_isready -U $$POSTGRES_USER
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  keycloak:
+    build: ./keycloak
+    container_name: keycloak
+    environment:
+      # See all config here: https://www.keycloak.org/server/all-config
+      KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN:-admin}"
+      KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-kc_admin_password}"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_DB_URL: jdbc:postgresql://postgresql:5432/keycloak?ssl=allow
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_password
+      KC_LOG_LEVEL: info
+    ports:
+      - ${KEYCLOAK_PORT:-8000}:8080
+    depends_on:
+      - postgresql
+    restart: unless-stopped
+
+  states:
+    image: quay.io/dfakto_org/states:${STATES_VERSION:-1.5.9}
+    container_name: states
+    volumes:
+      - states:/var/lib/dfakto-states
+    environment:
+      DFAKTO_STATES_STATECORE__REDISOPTIONS: redis:6379
+      DFAKTO_STATES_STATECORE__AWSACCESSKEY: "${STATES_ACCESS_KEY:-States_Dummy_Access_Key}"
+      DFAKTO_STATES_STATECORE__AWSSECRETKEY: "${STATES_SECRET_KEY:-States_Dummy_Secret_Key}"
+      DFAKTO_STATES_AUTHENTICATION__AUTHORITY: http://${DF_HOSTNAME:-datafactory.example.local}:${KEYCLOAK_PORT:-8000}/realms/data_factory
+      DFAKTO_STATES_AUTHENTICATION__CLIENTID: states
+      DFAKTO_STATES_AUTHENTICATION__AUDIENCE: account
+    depends_on:
+      - redis
+      - keycloak
+    ports:
+      - ${STATES_PORT:-5500}:5500
+    extra_hosts:
+      - "${DF_HOSTNAME:-datafactory.example.local}:host-gateway"
+    restart: unless-stopped
+
+  workers:
+    image: quay.io/dfakto_org/workers:${WORKERS_VERSION:-1.7.4}
+    container_name: workers
+    environment:
+      DFAKTO_WORKERS_STEPFUNCTIONS__authenticationKey: "${STATES_ACCESS_KEY:-States_Dummy_Access_Key}"
+      DFAKTO_WORKERS_STEPFUNCTIONS__authenticationSecret: "${STATES_SECRET_KEY:-States_Dummy_Secret_Key}"
+      DFAKTO_WORKERS_STEPFUNCTIONS__serviceUrl: http://states:5500
+      DFAKTO_WORKERS_STEPFUNCTIONS__EnvironmentName: Development
+    depends_on:
+      - states
+      - keycloak
+    volumes:
+      - workers:/var/lib/dfakto-workers
+    restart: unless-stopped
+
+  metavault:
+    image: quay.io/dfakto_org/metavault:${METAVAULT_VERSION:-3.1.6}
+    container_name: metavault
+    environment:
+      DFAKTO_METAVAULT_STEPFUNCTIONS__authenticationKey: "${STATES_ACCESS_KEY:-States_Dummy_Access_Key}"
+      DFAKTO_METAVAULT_STEPFUNCTIONS__authenticationSecret: "${STATES_SECRET_KEY:-States_Dummy_Secret_Key}"
+      DFAKTO_METAVAULT_STEPFUNCTIONS__serviceUrl: http://states:5500
+      DFAKTO_METAVAULT_AUTHENTICATION__AUTHORITY: http://${DF_HOSTNAME:-datafactory.example.local}:${KEYCLOAK_PORT:-8000}/realms/data_factory
+      DFAKTO_METAVAULT_AUTHENTICATION__REQUIREHTTPSMETADATA: "false" 
+      DFAKTO_METAVAULT_AUTHENTICATION__CLIENTID: metavault
+      DFAKTO_METAVAULT_AUTHENTICATION__AUDIENCE: account
+      DFAKTO_METAVAULT_AUTHENTICATION__ADMINEMAIL: admin@example.local
+      DFAKTO_METAVAULT_SERVERS__PostgreSQL__NAME: postgresql
+      DFAKTO_METAVAULT_SERVERS__PostgreSQL__PORT: 5432
+      DFAKTO_METAVAULT_SERVERS__PostgreSQL__DATABASETYPE: PostgreSQL15
+      DFAKTO_METAVAULT_SERVERS__PostgreSQL__USERNAME: metavault
+      DFAKTO_METAVAULT_SERVERS__PostgreSQL__PASSWORD: metavault_password
+      DFAKTO_METAVAULT_SERVERS__PostgreSQL__READONLYUSERNAME: metavault_readonly
+      DFAKTO_METAVAULT_SERVERS__PostgreSQL__READONLYPASSWORD: metavault_readonly_password
+    depends_on:
+      - states
+      - keycloak
+      - postgresql
+    volumes:
+      - metavault:/var/lib/dfakto-metavault
+    extra_hosts:
+      - "${DF_HOSTNAME:-datafactory.example.local}:host-gateway"
+    restart: unless-stopped
+
+  ui:
+    image: quay.io/dfakto_org/df2-ui:${UI_VERSION:-1.3.1}
+    container_name: ui
+    ports:
+      - ${UI_PORT:-8080}:80
+    environment:
+      DATAFACTORY_UI_HOST: "${DF_HOSTNAME:-datafactory.example.local}:${UI_PORT:-8080}"
+      METAVAULT_API_URL: http://metavault:5000
+      STATES_API_URL: http://states:5500
+    healthcheck:
+      test: service nginx status || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    extra_hosts:
+      - "${DF_HOSTNAME:-datafactory.example.local}:host-gateway"
+    depends_on:
+      - metavault
+      - keycloak
+    restart: unless-stopped
+
+volumes:
+  redis:
+  postgres:
+  metavault:
+  states:
+  workers:
