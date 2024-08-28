@@ -50,7 +50,7 @@ services:
     restart: unless-stopped
 
   states:
-    image: quay.io/dfakto_org/states:${STATES_VERSION:-1.5.9}
+    image: quay.io/dfakto_org/states:${STATES_VERSION:-latest}
     container_name: states
     volumes:
       - states:/var/lib/dfakto-states
@@ -71,7 +71,7 @@ services:
     restart: unless-stopped
 
   workers:
-    image: quay.io/dfakto_org/workers:${WORKERS_VERSION:-1.7.4}
+    image: quay.io/dfakto_org/workers:${WORKERS_VERSION:-latest}
     container_name: workers
     environment:
       DFAKTO_WORKERS_STEPFUNCTIONS__authenticationKey: "${STATES_ACCESS_KEY:-States_Dummy_Access_Key}"
@@ -86,7 +86,7 @@ services:
     restart: unless-stopped
 
   metavault:
-    image: quay.io/dfakto_org/metavault:${METAVAULT_VERSION:-3.1.6}
+    image: quay.io/dfakto_org/metavault:${METAVAULT_VERSION:-latest}
     container_name: metavault
     environment:
       DFAKTO_METAVAULT_STEPFUNCTIONS__authenticationKey: "${STATES_ACCESS_KEY:-States_Dummy_Access_Key}"
@@ -115,7 +115,7 @@ services:
     restart: unless-stopped
 
   ui:
-    image: quay.io/dfakto_org/df2-ui:${UI_VERSION:-1.3.1}
+    image: quay.io/dfakto_org/df2-ui:${UI_VERSION:-latest}
     container_name: ui
     ports:
       - ${UI_PORT:-8080}:80
