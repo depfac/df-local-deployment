@@ -136,6 +136,22 @@ services:
       - keycloak
     restart: unless-stopped
 
+  states-ui:
+    image: quay.io/dfakto_org/states-ui:${STATES_UI_VERSION}
+    container_name: states-ui
+    ports:
+      - 5500:80
+    environment:
+      STATES_API_URL: http://states:5500
+    healthcheck:
+      test: service nginx status || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    depends_on:
+      - states
+    restart: unless-stopped
+
 volumes:
   redis:
   postgres:
