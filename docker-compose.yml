@@ -65,8 +65,6 @@ services:
     depends_on:
       - redis
       - keycloak
-    ports:
-      - ${STATES_PORT:-5500}:5500
     extra_hosts:
       - "${DF_HOSTNAME:-datafactory.example.local}:host-gateway"
     restart: unless-stopped
@@ -115,13 +113,13 @@ services:
       - "${DF_HOSTNAME:-datafactory.example.local}:host-gateway"
     restart: unless-stopped
 
-  ui:
-    image: quay.io/dfakto_org/df2-ui:${UI_VERSION:-latest}
+  metavault-ui:
+    image: quay.io/dfakto_org/df2-ui:${METAVAULT_UI_VERSION:-latest}
     container_name: ui
     ports:
-      - ${UI_PORT:-8080}:80
+      - ${METAVAULT_UI_PORT:-8080}:80
     environment:
-      DATAFACTORY_UI_HOST: "${DF_HOSTNAME:-datafactory.example.local}:${UI_PORT:-8080}"
+      DATAFACTORY_UI_HOST: "${DF_HOSTNAME:-datafactory.example.local}:${METAVAULT_UI_PORT:-8080}"
       METAVAULT_API_URL: http://metavault:5000
       STATES_API_URL: http://states:5500
     healthcheck:
@@ -137,10 +135,10 @@ services:
     restart: unless-stopped
 
   states-ui:
-    image: quay.io/dfakto_org/states-ui:${STATES_UI_VERSION}
+    image: quay.io/dfakto_org/states-ui:${STATES_UI_VERSION:-latest}
     container_name: states-ui
     ports:
-      - 5500:80
+      - ${STATES_UI_PORT:-5500}:80
     environment:
       STATES_API_URL: http://states:5500
     healthcheck:
