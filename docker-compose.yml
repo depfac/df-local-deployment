@@ -77,6 +77,7 @@ services:
       DFAKTO_WORKERS_STEPFUNCTIONS__authenticationSecret: "${STATES_SECRET_KEY:-States_Dummy_Secret_Key}"
       DFAKTO_WORKERS_STEPFUNCTIONS__serviceUrl: http://states:5500
       DFAKTO_WORKERS_STEPFUNCTIONS__EnvironmentName: Development
+      DFAKTO_WORKERS_STEPFUNCTIONS__enableDfaktoExtensions: true
     depends_on:
       - states
       - keycloak
