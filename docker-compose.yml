@@ -46,7 +46,13 @@ services:
     ports:
       - ${KEYCLOAK_PORT:-8000}:8080
     depends_on:
-      - postgresql
+      postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: "{ printf 'HEAD /health/ready HTTP/1.0\r\n\r\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000"
+      interval: 5s
+      timeout: 2s
+      retries: 10
     restart: unless-stopped
 
   states:
@@ -63,8 +69,10 @@ services:
       DFAKTO_STATES_AUTHENTICATION__CLIENTID: states
       DFAKTO_STATES_AUTHENTICATION__AUDIENCE: account
     depends_on:
-      - valkey
-      - keycloak
+      valkey:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
     extra_hosts:
       - "${DF_HOSTNAME:-datafactory.example.local}:host-gateway"
     restart: unless-stopped
@@ -79,8 +87,8 @@ services:
       DFAKTO_WORKERS_STEPFUNCTIONS__EnvironmentName: Development
       DFAKTO_WORKERS_STEPFUNCTIONS__enableDfaktoExtensions: true
     depends_on:
-      - states
-      - keycloak
+      states:
+        condition: service_started
     volumes:
       - workers:/var/lib/dfakto-workers
     restart: unless-stopped
@@ -105,9 +113,12 @@ services:
       DFAKTO_METAVAULT_SERVERS__PostgreSQL__READONLYUSERNAME: metavault_readonly
       DFAKTO_METAVAULT_SERVERS__PostgreSQL__READONLYPASSWORD: metavault_readonly_password
     depends_on:
-      - states
-      - keycloak
-      - postgresql
+      states:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
     volumes:
       - metavault:/var/lib/dfakto-metavault
     extra_hosts:
@@ -123,6 +134,7 @@ services:
       DATAFACTORY_UI_HOST: "${DF_HOSTNAME:-datafactory.example.local}:${METAVAULT_UI_PORT:-8080}"
       METAVAULT_API_URL: http://metavault:5000
       STATES_API_URL: http://states:5500
+      NG_APP_STATES_URL: "http://${DF_HOSTNAME:-datafactory.example.local}:${STATES_UI_PORT:-5500}"
     healthcheck:
       test: service nginx status || exit 1
       interval: 10s
@@ -131,8 +143,8 @@ services:
     extra_hosts:
       - "${DF_HOSTNAME:-datafactory.example.local}:host-gateway"
     depends_on:
-      - metavault
-      - keycloak
+      metavault:
+        condition: service_started
     restart: unless-stopped
 
   states-ui:
@@ -142,13 +154,15 @@ services:
       - ${STATES_UI_PORT:-5500}:80
     environment:
       STATES_API_URL: http://states:5500
+      NG_APP_BEVAULT_URL: "http://${DF_HOSTNAME:-datafactory.example.local}:${METAVAULT_UI_PORT:-8080}"
     healthcheck:
       test: service nginx status || exit 1
       interval: 10s
       timeout: 3s
       retries: 10
     depends_on:
-      - states
+      states:
+        condition: service_started
     restart: unless-stopped
 
 volumes:

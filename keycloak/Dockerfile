@@ -8,4 +8,4 @@ FROM quay.io/keycloak/keycloak:26.6.1
 WORKDIR /opt/keycloak
 COPY --from=builder /opt/keycloak/lib/quarkus/ /opt/keycloak/lib/quarkus/
 COPY import /opt/keycloak/data/import
-ENTRYPOINT ["/opt/keycloak/bin/kc.sh", "start", "--optimized", "--import-realm"]
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh", "start", "--optimized", "--health-enabled=true", "--import-realm"]
