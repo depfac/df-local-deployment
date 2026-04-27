@@ -165,6 +165,21 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  mcp:
+    image: quay.io/dfakto_org/bevault_mcp:${MCP_VERSION:-latest}
+    container_name: mcp
+    environment:
+      BEVAULT_BASE_URL: "http://${DF_HOSTNAME:-datafactory.example.local}:${METAVAULT_UI_PORT:-8080}"
+      REQUEST_TIMEOUT_SECONDS: 30
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8000
+    ports:
+      - ${MCP_PORT:-8001}:8000
+    depends_on:
+      metavault:
+        condition: service_started
+    restart: unless-stopped
+
 volumes:
   valkey:
   postgres:
