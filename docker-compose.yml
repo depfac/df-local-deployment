@@ -1,11 +1,11 @@
 services:
-  redis:
-    image: redis:${REDIS_VERSION:-alpine}
-    container_name: redis
+  valkey:
+    image: valkey/valkey:${VALKEY_VERSION:-alpine}
+    container_name: valkey
     volumes:
-      - redis:/data
+      - valkey:/data
     healthcheck:
-      test: redis-cli ping
+      test: valkey-cli ping
       interval: 10s
       timeout: 3s
       retries: 10
@@ -55,7 +55,7 @@ services:
     volumes:
       - states:/var/lib/dfakto-states
     environment:
-      DFAKTO_STATES_STATECORE__REDISOPTIONS: redis:6379
+      DFAKTO_STATES_STATECORE__REDISOPTIONS: valkey:6379
       DFAKTO_STATES_STATECORE__AWSACCESSKEY: "${STATES_ACCESS_KEY:-States_Dummy_Access_Key}"
       DFAKTO_STATES_STATECORE__AWSSECRETKEY: "${STATES_SECRET_KEY:-States_Dummy_Secret_Key}"
       DFAKTO_STATES_AUTHENTICATION__AUTHORITY: http://${DF_HOSTNAME:-datafactory.example.local}:${KEYCLOAK_PORT:-8000}/realms/data_factory
@@ -63,7 +63,7 @@ services:
       DFAKTO_STATES_AUTHENTICATION__CLIENTID: states
       DFAKTO_STATES_AUTHENTICATION__AUDIENCE: account
     depends_on:
-      - redis
+      - valkey
       - keycloak
     extra_hosts:
       - "${DF_HOSTNAME:-datafactory.example.local}:host-gateway"
@@ -152,7 +152,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  redis:
+  valkey:
   postgres:
   metavault:
   states:
