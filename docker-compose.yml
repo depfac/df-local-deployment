@@ -135,11 +135,6 @@ services:
       METAVAULT_API_URL: http://metavault:5000
       STATES_API_URL: http://states:5500
       NG_APP_STATES_URL: "http://${DF_HOSTNAME:-datafactory.example.local}:${STATES_UI_PORT:-5500}"
-    healthcheck:
-      test: service nginx status || exit 1
-      interval: 10s
-      timeout: 3s
-      retries: 10
     extra_hosts:
       - "${DF_HOSTNAME:-datafactory.example.local}:host-gateway"
     depends_on:
@@ -155,11 +150,6 @@ services:
     environment:
       STATES_API_URL: http://states:5500
       NG_APP_BEVAULT_URL: "http://${DF_HOSTNAME:-datafactory.example.local}:${METAVAULT_UI_PORT:-8080}"
-    healthcheck:
-      test: service nginx status || exit 1
-      interval: 10s
-      timeout: 3s
-      retries: 10
     depends_on:
       states:
         condition: service_started
