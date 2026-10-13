@@ -59,7 +59,7 @@ services:
     image: quay.io/dfakto_org/states:${STATES_VERSION:-latest}
     container_name: states
     volumes:
-      - states:/var/lib/dfakto-states
+      - states:/data
     environment:
       DFAKTO_STATES_STATECORE__REDISOPTIONS: valkey:6379
       DFAKTO_STATES_STATECORE__AWSACCESSKEY: "${STATES_ACCESS_KEY:-States_Dummy_Access_Key}"
@@ -90,7 +90,7 @@ services:
       states:
         condition: service_started
     volumes:
-      - workers:/var/lib/dfakto-workers
+      - workers:/data
     restart: unless-stopped
 
   metavault:
@@ -120,7 +120,7 @@ services:
       postgresql:
         condition: service_healthy
     volumes:
-      - metavault:/var/lib/dfakto-metavault
+      - metavault:/data
     extra_hosts:
       - "${DF_HOSTNAME:-datafactory.example.local}:host-gateway"
     restart: unless-stopped
